@@ -84,8 +84,45 @@ void setup() {
 void loop() {
 	// Look for new cards
 
-  delay(1000);
-   if(digitalRead(S2) && digitalRead(S4))     // Move Forward
+  //delay(1000);
+  int sensor1=digitalRead(S1);//sensor1
+  int sensor2=digitalRead(S2);//sensor2
+  int sensor3=digitalRead(S3);//sensor3
+  int sensor4=digitalRead(S4);//sensor4
+  int sensor5=digitalRead(S5);//sensor5
+
+  
+   if(sensor1 && sensor2 && sensor4 && sensor5)     // Move Forward
+  {
+     digitalWrite(MOTOR1_IN1, HIGH);
+     digitalWrite(MOTOR1_IN2, LOW);
+     digitalWrite(MOTOR2_IN1, LOW);
+     digitalWrite(MOTOR2_IN2, HIGH);
+     digitalWrite(MOTOR3_IN1, LOW);
+     digitalWrite(MOTOR3_IN2, LOW);
+
+  }
+   else if(!sensor2)
+  {
+     digitalWrite(MOTOR1_IN1, HIGH);
+     digitalWrite(MOTOR1_IN2, LOW);
+     digitalWrite(MOTOR2_IN1, HIGH);
+     digitalWrite(MOTOR2_IN2, LOW);
+     digitalWrite(MOTOR3_IN1, LOW);
+     digitalWrite(MOTOR3_IN2, LOW);
+ 
+  }
+   else if(!sensor4)
+  {
+     digitalWrite(MOTOR1_IN1, LOW);
+     digitalWrite(MOTOR1_IN2, HIGH);
+     digitalWrite(MOTOR2_IN1, LOW);
+     digitalWrite(MOTOR2_IN2, HIGH);
+     digitalWrite(MOTOR3_IN1, LOW);
+     digitalWrite(MOTOR3_IN2, LOW);
+ 
+  }
+   else if(!sensor1)
   {
      digitalWrite(MOTOR1_IN1, HIGH);
      digitalWrite(MOTOR1_IN2, LOW);
@@ -93,20 +130,38 @@ void loop() {
      digitalWrite(MOTOR2_IN2, LOW);
      digitalWrite(MOTOR3_IN1, HIGH);
      digitalWrite(MOTOR3_IN2, LOW);
-
+ 
   }
-   else
+   else if(!sensor5)
   {
      digitalWrite(MOTOR1_IN1, LOW);
-     digitalWrite(MOTOR1_IN2, LOW);
+     digitalWrite(MOTOR1_IN2, HIGH);
      digitalWrite(MOTOR2_IN1, LOW);
-     digitalWrite(MOTOR2_IN2, LOW);
+     digitalWrite(MOTOR2_IN2, HIGH);
      digitalWrite(MOTOR3_IN1, LOW);
+     digitalWrite(MOTOR3_IN2, HIGH);
+ 
+  }
+   else if(!sensor1&&!sensor2)
+  {
+     digitalWrite(MOTOR1_IN1, HIGH);
+     digitalWrite(MOTOR1_IN2, LOW);
+     digitalWrite(MOTOR2_IN1, HIGH);
+     digitalWrite(MOTOR2_IN2, LOW);
+     digitalWrite(MOTOR3_IN1, HIGH);
      digitalWrite(MOTOR3_IN2, LOW);
  
   }
-  
+   else if(!sensor5&&!sensor4)
+  {
+     digitalWrite(MOTOR1_IN1, LOW);
+     digitalWrite(MOTOR1_IN2, HIGH);
+     digitalWrite(MOTOR2_IN1, LOW);
+     digitalWrite(MOTOR2_IN2, HIGH);
+     digitalWrite(MOTOR3_IN1, LOW);
+     digitalWrite(MOTOR3_IN2, HIGH);
  
+  }
  
 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
 		return;
