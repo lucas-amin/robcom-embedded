@@ -56,42 +56,70 @@ constexpr uint8_t S4 = 25;
 constexpr uint8_t S5 = 26;
 
 
+constexpr uint8_t BUZZER = 2;         // Configurable, see typical pin layout above
+
+
+constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout above
+
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 void setup() {
 
+//Sensor de 5 vias
   pinMode(S1, INPUT);
   pinMode(S2, INPUT);
   pinMode(S3, INPUT);
   pinMode(S4, INPUT);
   pinMode(S5, INPUT);
-  
+
+  //Pinos dos motores
   pinMode(MOTOR1_IN1, OUTPUT);
   pinMode(MOTOR1_IN2, OUTPUT);
   pinMode(MOTOR2_IN1, OUTPUT);
   pinMode(MOTOR2_IN2, OUTPUT);
   pinMode(MOTOR3_IN1, OUTPUT);
-  pinMode(MOTOR3_IN2, OUTPUT);
-  
+  pinMode(MOTOR1_SPD, OUTPUT);
+  pinMode(MOTOR2_SPD, OUTPUT);
+  pinMode(MOTOR3_SPD, OUTPUT);
+
+  //Pino do Buzzer
+  pinMode(BUZZER, OUTPUT);
+
+  //Pino do sensor de copo
+  //pinMode(COPO, INPUT);
+
 	Serial.begin(9600);		// Initialize serial communications with the PC
 	while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
 	SPI.begin();			// Init SPI bus
 	mfrc522.PCD_Init();		// Init MFRC522
 	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
 	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+  digitalWrite(MOTOR1_SPD, HIGH);
+  digitalWrite(MOTOR2_SPD, HIGH);
+  digitalWrite(MOTOR3_SPD, HIGH);
+
 }
 
 void loop() {
 	// Look for new cards
-
+  digitalWrite(MOTOR1_SPD, HIGH);
+  digitalWrite(MOTOR2_SPD, HIGH);
+  digitalWrite(MOTOR3_SPD, HIGH);
+  delayMicroseconds(100);
+  digitalWrite(MOTOR1_SPD, LOW);
+  digitalWrite(MOTOR2_SPD, LOW);
+  digitalWrite(MOTOR3_SPD, LOW);
+  delayMicroseconds(900);
   //delay(1000);
   int sensor1=digitalRead(S1);//sensor1
   int sensor2=digitalRead(S2);//sensor2
   int sensor3=digitalRead(S3);//sensor3
   int sensor4=digitalRead(S4);//sensor4
   int sensor5=digitalRead(S5);//sensor5
-
-  
+  int cup=analogRead(COPO);//sensor de copo 
+  Serial.print(cup);
+  Serial.print("\n");
    if(sensor1 && sensor2 && sensor4 && sensor5)     // Move Forward
   {
      digitalWrite(MOTOR1_IN1, HIGH);
@@ -162,7 +190,16 @@ void loop() {
      digitalWrite(MOTOR3_IN2, HIGH);
  
   }
- 
+
+  if(cup>>100)
+    digitalWrite(BUZZER, HIGH);
+  else
+    digitalWrite(BUZZER, LOW);
+    
+  //delay(1000);
+  //digitalWrite(BUZZER, LOW);
+  //delay(1000);
+  
 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
 		return;
 	}
