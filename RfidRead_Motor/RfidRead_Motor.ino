@@ -64,6 +64,84 @@ constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout abo
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
+
+void checkCup()
+{
+  int cup=analogRead(COPO);//sensor de copo 
+  Serial.print(cup);
+  Serial.print("\n");
+  if(cup>>100)
+    digitalWrite(BUZZER, HIGH);
+  else
+    digitalWrite(BUZZER, LOW);
+  
+}
+
+void turnLeft(int spd)
+{
+  analogWrite(MOTOR1_SPD, spd);
+  analogWrite(MOTOR2_SPD, spd);
+  analogWrite(MOTOR3_SPD, spd);
+  digitalWrite(MOTOR1_IN1, HIGH);
+  digitalWrite(MOTOR1_IN2, LOW);
+  digitalWrite(MOTOR2_IN1, HIGH);
+  digitalWrite(MOTOR2_IN2, LOW);
+  digitalWrite(MOTOR3_IN1, HIGH);
+  digitalWrite(MOTOR3_IN2, LOW);
+}
+
+void turnRight(int spd)
+{
+  analogWrite(MOTOR1_SPD, spd);
+  analogWrite(MOTOR2_SPD, spd);
+  analogWrite(MOTOR3_SPD, spd);
+  digitalWrite(MOTOR1_IN1, LOW);
+  digitalWrite(MOTOR1_IN2, HIGH);
+  digitalWrite(MOTOR2_IN1, LOW);
+  digitalWrite(MOTOR2_IN2, HIGH);
+  digitalWrite(MOTOR3_IN1, LOW);
+  digitalWrite(MOTOR3_IN2, HIGH);
+}
+void go(int spd)
+{
+  analogWrite(MOTOR1_SPD, spd);
+  analogWrite(MOTOR2_SPD, spd);
+  analogWrite(MOTOR3_SPD, spd);
+  digitalWrite(MOTOR1_IN1, HIGH);
+  digitalWrite(MOTOR1_IN2, LOW);
+  digitalWrite(MOTOR2_IN1, LOW);
+  digitalWrite(MOTOR2_IN2, HIGH);
+  digitalWrite(MOTOR3_IN1, LOW);
+  digitalWrite(MOTOR3_IN2, LOW);
+}
+
+void control()
+{
+  int sensor1=digitalRead(S1);//sensor1
+  int sensor2=digitalRead(S2);//sensor2
+  int sensor3=digitalRead(S3);//sensor3
+  int sensor4=digitalRead(S4);//sensor4
+  int sensor5=digitalRead(S5);//sensor5
+  
+  if(sensor1 and sensor2 and !sensor3 and sensor4 and sensor5)     // Move Forward
+  {
+     go(200);
+
+  }
+   else if(!sensor2 or !sensor1)
+  {
+     turnLeft(200);
+ 
+  }
+   else if(!sensor4 or !sensor5)
+  {
+     turnRight(200);
+ 
+  }
+   
+}
+
+
 void setup() {
 
 //Sensor de 5 vias
@@ -95,110 +173,13 @@ void setup() {
 	mfrc522.PCD_Init();		// Init MFRC522
 	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
 	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
-  digitalWrite(MOTOR1_SPD, HIGH);
-  digitalWrite(MOTOR2_SPD, HIGH);
-  digitalWrite(MOTOR3_SPD, HIGH);
-
 }
 
 void loop() {
-	// Look for new cards
-  digitalWrite(MOTOR1_SPD, HIGH);
-  digitalWrite(MOTOR2_SPD, HIGH);
-  digitalWrite(MOTOR3_SPD, HIGH);
-  delayMicroseconds(100);
-  digitalWrite(MOTOR1_SPD, LOW);
-  digitalWrite(MOTOR2_SPD, LOW);
-  digitalWrite(MOTOR3_SPD, LOW);
-  delayMicroseconds(900);
-  //delay(1000);
-  int sensor1=digitalRead(S1);//sensor1
-  int sensor2=digitalRead(S2);//sensor2
-  int sensor3=digitalRead(S3);//sensor3
-  int sensor4=digitalRead(S4);//sensor4
-  int sensor5=digitalRead(S5);//sensor5
-  int cup=analogRead(COPO);//sensor de copo 
-  Serial.print(cup);
-  Serial.print("\n");
-   if(sensor1 && sensor2 && sensor4 && sensor5)     // Move Forward
-  {
-     digitalWrite(MOTOR1_IN1, HIGH);
-     digitalWrite(MOTOR1_IN2, LOW);
-     digitalWrite(MOTOR2_IN1, LOW);
-     digitalWrite(MOTOR2_IN2, HIGH);
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, LOW);
-
-  }
-   else if(!sensor2)
-  {
-     digitalWrite(MOTOR1_IN1, HIGH);
-     digitalWrite(MOTOR1_IN2, LOW);
-     digitalWrite(MOTOR2_IN1, HIGH);
-     digitalWrite(MOTOR2_IN2, LOW);
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, LOW);
- 
-  }
-   else if(!sensor4)
-  {
-     digitalWrite(MOTOR1_IN1, LOW);
-     digitalWrite(MOTOR1_IN2, HIGH);
-     digitalWrite(MOTOR2_IN1, LOW);
-     digitalWrite(MOTOR2_IN2, HIGH);
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, LOW);
- 
-  }
-   else if(!sensor1)
-  {
-     digitalWrite(MOTOR1_IN1, HIGH);
-     digitalWrite(MOTOR1_IN2, LOW);
-     digitalWrite(MOTOR2_IN1, HIGH);
-     digitalWrite(MOTOR2_IN2, LOW);
-     digitalWrite(MOTOR3_IN1, HIGH);
-     digitalWrite(MOTOR3_IN2, LOW);
- 
-  }
-   else if(!sensor5)
-  {
-     digitalWrite(MOTOR1_IN1, LOW);
-     digitalWrite(MOTOR1_IN2, HIGH);
-     digitalWrite(MOTOR2_IN1, LOW);
-     digitalWrite(MOTOR2_IN2, HIGH);
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, HIGH);
- 
-  }
-   else if(!sensor1&&!sensor2)
-  {
-     digitalWrite(MOTOR1_IN1, HIGH);
-     digitalWrite(MOTOR1_IN2, LOW);
-     digitalWrite(MOTOR2_IN1, HIGH);
-     digitalWrite(MOTOR2_IN2, LOW);
-     digitalWrite(MOTOR3_IN1, HIGH);
-     digitalWrite(MOTOR3_IN2, LOW);
- 
-  }
-   else if(!sensor5&&!sensor4)
-  {
-     digitalWrite(MOTOR1_IN1, LOW);
-     digitalWrite(MOTOR1_IN2, HIGH);
-     digitalWrite(MOTOR2_IN1, LOW);
-     digitalWrite(MOTOR2_IN2, HIGH);
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, HIGH);
- 
-  }
-
-  if(cup>>100)
-    digitalWrite(BUZZER, HIGH);
-  else
-    digitalWrite(BUZZER, LOW);
-    
-  //delay(1000);
-  //digitalWrite(BUZZER, LOW);
-  //delay(1000);
+  
+  
+  checkCup();
+  control();
   
 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
 		return;
