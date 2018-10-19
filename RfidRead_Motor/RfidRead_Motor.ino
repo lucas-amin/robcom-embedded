@@ -36,18 +36,18 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-constexpr uint8_t RST_PIN = 4;          // Configurable, see typical pin layout above
+constexpr uint8_t RST_PIN = 2;          // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = 53;         // Configurable, see typical pin layout above
 
-constexpr uint8_t MOTOR1_SPD = 5;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_SPD = 6;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_SPD = 7;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR1_IN1 = 8;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR1_IN2 = 9;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_IN1 = 10;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_IN2 = 11;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_IN1 = 12;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_IN2 = 13;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_SPD = 3;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR2_SPD = 4;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR3_SPD = 5;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_IN1 = 6;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_IN2 = 7;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR2_IN1 = 8;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR2_IN2 = 9;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR3_IN1 = 10;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR3_IN2 = 11;         // Configurable, see typical pin layout above
 
 constexpr uint8_t S1 = 22;
 constexpr uint8_t S2 = 23;
@@ -55,13 +55,17 @@ constexpr uint8_t S3 = 24;
 constexpr uint8_t S4 = 25;
 constexpr uint8_t S5 = 26;
 
-
-constexpr uint8_t BUZZER = 2;         // Configurable, see typical pin layout above
+constexpr uint8_t BUZZER = 12;         // Configurable, see typical pin layout above
 
 
 constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout above
 
-
+MFRC522::Uid uid1 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
+//uid1.size = 4 
+//uid1.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card1
+MFRC522::Uid uid2 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
+//uid2.size = 4 
+//uid2.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card2
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 
@@ -141,7 +145,32 @@ void control()
    
 }
 
-
+void checkRFID()
+{
+  if(mfrc522.uid.uidByte == uid1.uidByte)
+  {
+    for(int i=0;i<5;i++)
+    {
+      digitalWrite(BUZZER, HIGH);
+      delay(1000);
+      digitalWrite(BUZZER, LOW);
+      delay(1000);
+      
+    }
+    
+  }
+  else if(mfrc522.uid.uidByte == uid2.uidByte)
+  {
+    for(int i=0;i<25;i++)
+    {
+      digitalWrite(BUZZER, HIGH);
+      delay(200);
+      digitalWrite(BUZZER, LOW);
+      delay(200);
+      
+    }
+  }
+}
 void setup() {
 
 //Sensor de 5 vias
@@ -189,7 +218,13 @@ void loop() {
 	if ( ! mfrc522.PICC_ReadCardSerial()) {
 		return;
 	}
+  else
+    checkRFID();
 
 	// Dump debug info about the card; PICC_HaltA() is automatically called
 	mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+
+  if(uid1.uidByte == uid2.uidByte)
+    Serial.print(F("AE PORRA"));
+  
 }
