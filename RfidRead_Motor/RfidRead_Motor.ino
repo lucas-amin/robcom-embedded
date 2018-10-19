@@ -60,12 +60,13 @@ constexpr uint8_t BUZZER = 12;         // Configurable, see typical pin layout a
 
 constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout above
 
-MFRC522::Uid uid1 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
-//uid1.size = 4 
-//uid1.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card1
-MFRC522::Uid uid2 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
-//uid2.size = 4 
-//uid2.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card2
+//------------------------------------------------------------------IDS Cadastrados-------------------------------------------------------------------//
+
+//(size,uid,whatevs)
+MFRC522::Uid uid1 = {4, {0xff, 0xff, 0xff, 0xff}/*<--uid*/, 0xff};
+
+MFRC522::Uid uid2 = {4, {0xff, 0xff, 0xff, 0xff}/*<--uid*/, 0xff};
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 
