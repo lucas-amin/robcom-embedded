@@ -36,36 +36,58 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
+
+/* MOTOR 1 -> /
+* MOTOR 2 -> \
+* MOTOR 3 -> l */
+
 constexpr uint8_t RST_PIN = 2;          // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = 53;         // Configurable, see typical pin layout above
 
-constexpr uint8_t MOTOR1_SPD = 3;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_SPD = 4;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_SPD = 5;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR1_IN1 = 6;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR1_IN2 = 7;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_IN1 = 8;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR2_IN2 = 9;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_IN1 = 10;         // Configurable, see typical pin layout above
-constexpr uint8_t MOTOR3_IN2 = 11;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_SPD = 4;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_IN1 = 3;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR1_IN2 = 5;         // Configurable, see typical pin layout above
 
-constexpr uint8_t S1 = 22;
-constexpr uint8_t S2 = 23;
-constexpr uint8_t S3 = 24;
-constexpr uint8_t S4 = 25;
-constexpr uint8_t S5 = 26;
+constexpr uint8_t MOTOR2_SPD = 6;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR2_IN1 = 7;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR2_IN2 = 8;         // Configurable, see typical pin layout above
+
+constexpr uint8_t MOTOR3_IN1 = 9;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR3_IN2 = 10;         // Configurable, see typical pin layout above
+constexpr uint8_t MOTOR3_SPD = 11;         // Configurable, see typical pin layout above
+
+constexpr uint8_t S1 = 38;
+constexpr uint8_t S2 = 40;
+constexpr uint8_t S3 = 42;
+constexpr uint8_t S4 = 44;
+constexpr uint8_t S5 = 46;
 
 constexpr uint8_t BUZZER = 12;         // Configurable, see typical pin layout above
 
 
 constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout above
+float IMPULSE_CONSTANT = 1.2;
 
-MFRC522::Uid uid1 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
+/* MOTOR 1 -> /
+* MOTOR 2 -> \
+* MOTOR 3 -> l                                       */
+int direction_number = 0;
+int FRONT = 1;
+int LEFT = 2;
+int RIGHT = 3;
+int counter = 0;
+int side = 0;
+
+MFRC522::Uid uid1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff};
 //uid1.size = 4 
-//uid1.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card1
-MFRC522::Uid uid2 = {4, {0xff, 0xff, 0xff, 0xff}, 0xff};
+//uid1.uidByte = {0x29, 0x4B, 0x0B, 0x0E} ; // uid do card1
+
+
+MFRC522::Uid uid2 = {4, {0x04, 0x1C, 0x98, 0xEB}, 0xff};
 //uid2.size = 4 
-//uid2.uidByte = {0xff, 0xff, 0xff, 0xff} ; // uid do card2
+//uid2.uidByte = {0x04, 0x1C, 0x98, 0xEB} ; // uid do card2
+
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 
@@ -83,41 +105,90 @@ void checkCup()
 
 void turnLeft(int spd)
 {
-  analogWrite(MOTOR1_SPD, spd);
-  analogWrite(MOTOR2_SPD, spd);
-  analogWrite(MOTOR3_SPD, spd);
+  if (direction_number != LEFT ) {
+    analogWrite(MOTOR1_SPD, spd * IMPULSE_CONSTANT);
+    analogWrite(MOTOR2_SPD, spd * IMPULSE_CONSTANT);
+    analogWrite(MOTOR3_SPD, spd * IMPULSE_CONSTANT);
+    
+//    Serial.print("IMPULSE LEFT");
+  } else {
+    analogWrite(MOTOR1_SPD, spd);
+    analogWrite(MOTOR2_SPD, spd);
+    analogWrite(MOTOR3_SPD, spd);
+    
+//  Serial.print("NORMAL LEFT");
+  }
+  direction_number = LEFT;
+  
   digitalWrite(MOTOR1_IN1, HIGH);
   digitalWrite(MOTOR1_IN2, LOW);
-  digitalWrite(MOTOR2_IN1, HIGH);
-  digitalWrite(MOTOR2_IN2, LOW);
-  digitalWrite(MOTOR3_IN1, HIGH);
-  digitalWrite(MOTOR3_IN2, LOW);
+  
+  digitalWrite(MOTOR2_IN1, LOW);
+  digitalWrite(MOTOR2_IN2, HIGH);
+  
+  digitalWrite(MOTOR3_IN1, LOW);
+  digitalWrite(MOTOR3_IN2, HIGH);
 }
 
 void turnRight(int spd)
 {
-  analogWrite(MOTOR1_SPD, spd);
-  analogWrite(MOTOR2_SPD, spd);
-  analogWrite(MOTOR3_SPD, spd);
+  if (direction_number != RIGHT) {
+    analogWrite(MOTOR1_SPD, spd * IMPULSE_CONSTANT);
+    analogWrite(MOTOR2_SPD, spd * IMPULSE_CONSTANT);
+    analogWrite(MOTOR3_SPD, spd * IMPULSE_CONSTANT);
+    
+    Serial.print("IMPULSE RIGHT");
+  } else {
+    analogWrite(MOTOR1_SPD, spd);
+    analogWrite(MOTOR2_SPD, spd);
+    analogWrite(MOTOR3_SPD, spd );
+    
+  Serial.print("NORMAL RIGHT");
+  }
+
+  direction_number = RIGHT;
+  
   digitalWrite(MOTOR1_IN1, LOW);
   digitalWrite(MOTOR1_IN2, HIGH);
-  digitalWrite(MOTOR2_IN1, LOW);
-  digitalWrite(MOTOR2_IN2, HIGH);
-  digitalWrite(MOTOR3_IN1, LOW);
-  digitalWrite(MOTOR3_IN2, HIGH);
+  
+  digitalWrite(MOTOR2_IN1, HIGH);
+  digitalWrite(MOTOR2_IN2, LOW);
+  
+  digitalWrite(MOTOR3_IN1, HIGH);
+  digitalWrite(MOTOR3_IN2, LOW);
 }
+
 void go(int spd)
 {
-  analogWrite(MOTOR1_SPD, spd);
-  analogWrite(MOTOR2_SPD, spd);
+  if (direction_number != FRONT) {
+    analogWrite(MOTOR1_SPD, 160 * IMPULSE_CONSTANT  );
+    analogWrite(MOTOR2_SPD, 118 * IMPULSE_CONSTANT  );
+    
+    Serial.print("IMPULSE FRONT");
+  }
+  else {
+  
+  analogWrite(MOTOR1_SPD, 160 );
+  analogWrite(MOTOR2_SPD, 118  );
   analogWrite(MOTOR3_SPD, spd);
+//  Serial.print("NORMAL FRONT");
+
+  }
+  direction_number = FRONT;
+  
   digitalWrite(MOTOR1_IN1, HIGH);
   digitalWrite(MOTOR1_IN2, LOW);
-  digitalWrite(MOTOR2_IN1, LOW);
-  digitalWrite(MOTOR2_IN2, HIGH);
+  
+  digitalWrite(MOTOR2_IN1, HIGH);
+  digitalWrite(MOTOR2_IN2, LOW);
+  
   digitalWrite(MOTOR3_IN1, LOW);
   digitalWrite(MOTOR3_IN2, LOW);
 }
+
+/* MOTOR 1 -> /
+* MOTOR 2 -> \
+* MOTOR 3 -> l                                       */
 
 void control()
 {
@@ -126,47 +197,70 @@ void control()
   int sensor3=digitalRead(S3);//sensor3
   int sensor4=digitalRead(S4);//sensor4
   int sensor5=digitalRead(S5);//sensor5
-  
-  if(sensor1 and sensor2 and !sensor3 and sensor4 and sensor5)     // Move Forward
-  {
-     go(200);
 
-  }
-   else if(!sensor2 or !sensor1)
+  if(!sensor3)     // Move Forward
   {
-     turnLeft(200);
- 
+     Serial.print("going forward");
+    go(255);
+    counter = 0;
   }
-   else if(!sensor4 or !sensor5)
+   else if(!sensor2 )
   {
-     turnRight(200);
- 
+    
+     Serial.print("going left");
+     turnLeft(90);
+    counter = 0;
   }
+   else if(!sensor4)
+  {
+     Serial.print("going right");
+     turnRight(90);
+    counter = 0;
+  } else {
+    // Serial.print(counter);
+    
+    counter++;
+    if (counter % 3) {
+      turnRight(90);
+      side = LEFT;
+    }
+    if (counter % 5 == 0) {
+      direction_number = 0;
+    }
+  }
+
+  Serial.print("\n");
    
 }
 
 void checkRFID()
 {
-  if(mfrc522.uid.uidByte == uid1.uidByte)
+  Serial.print("Checking RFID");
+  
+  if(mfrc522.uid.uidByte[0] == uid1.uidByte[0])
   {
     for(int i=0;i<5;i++)
     {
-      digitalWrite(BUZZER, HIGH);
+      Serial.print("FIRST CARD");
+      /*digitalWrite(BUZZER, HIGH);
       delay(1000);
       digitalWrite(BUZZER, LOW);
-      delay(1000);
+      delay(1000);*/
+      analogWrite(BUZZER, 20);
       
     }
     
   }
-  else if(mfrc522.uid.uidByte == uid2.uidByte)
+  else if(mfrc522.uid.uidByte[0] == uid2.uidByte[0])
   {
     for(int i=0;i<25;i++)
     {
-      digitalWrite(BUZZER, HIGH);
+      Serial.print("SECOND CARD");
+      /*digitalWrite(BUZZER, HIGH);
       delay(200);
       digitalWrite(BUZZER, LOW);
-      delay(200);
+      delay(200);*/
+      analogWrite(BUZZER, 250);
       
     }
   }
@@ -179,7 +273,8 @@ void setup() {
   pinMode(S3, INPUT);
   pinMode(S4, INPUT);
   pinMode(S5, INPUT);
-
+  direction_number = 0;
+  
   //Pinos dos motores
   pinMode(MOTOR1_IN1, OUTPUT);
   pinMode(MOTOR1_IN2, OUTPUT);
@@ -202,12 +297,14 @@ void setup() {
 	mfrc522.PCD_Init();		// Init MFRC522
 	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
 	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+
+  turnLeft(80);
 }
 
 void loop() {
   
   
-  checkCup();
+  //checkCup();
   control();
   
 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
@@ -218,13 +315,13 @@ void loop() {
 	if ( ! mfrc522.PICC_ReadCardSerial()) {
 		return;
 	}
-  else
-    checkRFID();
+  
+  checkRFID();
 
 	// Dump debug info about the card; PICC_HaltA() is automatically called
 	mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
 
-  if(uid1.uidByte == uid2.uidByte)
-    Serial.print(F("AE PORRA"));
+  if(uid1.uidByte)
+    Serial.print("AE");
   
 }
