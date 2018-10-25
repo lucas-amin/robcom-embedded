@@ -36,7 +36,6 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-
 /* MOTOR 1 -> /
 * MOTOR 2 -> \
 * MOTOR 3 -> l */
@@ -87,6 +86,13 @@ MFRC522::Uid uid2 = {4, {0x04, 0x1C, 0x98, 0xEB}, 0xff};
 //uid2.size = 4 
 //uid2.uidByte = {0x04, 0x1C, 0x98, 0xEB} ; // uid do card2
 
+//------------------------------------------------------------------IDS Cadastrados-------------------------------------------------------------------//
+
+//(size,uid,whatevs)
+MFRC522::Uid uid1 = {4, {0xff, 0xff, 0xff, 0xff}/*<--uid*/, 0xff};
+
+MFRC522::Uid uid2 = {4, {0xff, 0xff, 0xff, 0xff}/*<--uid*/, 0xff};
+>>>>>>> e9d4eee55e0f5028c6dbd5fcb8edff310778ba86
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
