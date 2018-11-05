@@ -36,9 +36,12 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-/* MOTOR 1 -> /
-  MOTOR 2 -> \
-  MOTOR 3 -> l */
+
+#define KP 0
+#define KD 0
+#define LINE 2000
+#define BASESPD 130
+#define MAXSPD 220
 
 constexpr uint8_t RST_PIN = 2;          // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = 53;         // Configurable, see typical pin layout above
@@ -67,8 +70,8 @@ constexpr uint8_t BUZZER = 12;         // Configurable, see typical pin layout a
 constexpr uint8_t COPO = 15;         // Configurable, see typical pin layout above
 float IMPULSE_CONSTANT = 1.3;
 
-/* MOTOR 1 <--
-  MOTOR 2 --> 
+/* MOTOR 1 -->
+  MOTOR 2  <-- 
   MOTOR 3  V
             */
 int direction_number = 0;
@@ -77,7 +80,7 @@ int LEFT = 2;
 int RIGHT = 3;
 int counter = 0;
 int side = 0;
-
+float pos = LINE, error = 0, lError = 0, lPos;
 MFRC522::Uid uid1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff};
 //uid1.size = 4
 //uid1.uidByte = {0x29, 0x4B, 0x0B, 0x0E} ; // uid do card1
@@ -209,8 +212,62 @@ void control()
   int sensor3 = digitalRead(S3); //sensor3
   int sensor4 = digitalRead(S4); //sensor4
   int sensor5 = digitalRead(S5); //sensor5
-
-  if (!sensor3)    // Move Forward
+  int ps1 = !sensor1*0;
+  int ps2 = !sensor2*1000;
+  int ps3 = !sensor3*2000;
+  int ps4 = !sensor4*3000;
+  int ps5 = !sensor5*4000;
+  
+  if(!sensor1 or !sensor2 or !sensor3 or !sensor4 or !sensor5)
+  {
+    lPos = pos;
+    pos = (ps1 + ps2+ ps3 + ps4 + ps5)/(!sensor1 + !sensor2 + !sensor3 + !sensor4 + !sensor5);
+    lError = error;
+    error = pos - LINE;
+    //Serial.print(error);
+    //Serial.print("\n");
+    float k = 0.015;
+    float motorSpd = k * error; //+ Kd * (error - lError);
+    int spd1 = (BASESPD - motorSpd) * 1.25;
+    int spd2 = BASESPD + motorSpd;
+    if(spd1>MAXSPD)
+      spd1 = MAXSPD;
+    if(spd2>MAXSPD)
+      spd2 = MAXSPD;
+    Serial.print(motorSpd);
+    Serial.print("\nspd1\n");
+    Serial.print(spd2);
+    Serial.print("\nspd2\n");
+    analogWrite(MOTOR1_SPD,spd1);
+    analogWrite(MOTOR2_SPD,spd2);
+  
+    digitalWrite(MOTOR1_IN1, HIGH);
+    digitalWrite(MOTOR1_IN2, LOW);
+  
+    digitalWrite(MOTOR2_IN1, HIGH);
+    digitalWrite(MOTOR2_IN2, LOW);
+  
+    digitalWrite(MOTOR3_IN1, HIGH);
+    digitalWrite(MOTOR3_IN2, HIGH);
+    
+  }
+  else
+  {
+    analogWrite(MOTOR1_SPD,130);
+    analogWrite(MOTOR2_SPD,130);
+    analogWrite(MOTOR3_SPD,130);
+  
+    digitalWrite(MOTOR1_IN1, LOW);
+    digitalWrite(MOTOR1_IN2, HIGH);
+  
+    digitalWrite(MOTOR2_IN1, HIGH);
+    digitalWrite(MOTOR2_IN2, LOW);
+  
+    digitalWrite(MOTOR3_IN1, HIGH);
+    digitalWrite(MOTOR3_IN2, LOW);
+    
+  }
+  /*if (!sensor3)    // Move Forward
   {
     Serial.print("going forward");
     go(138);
@@ -242,7 +299,7 @@ void control()
   }
 
   Serial.print("\n");
-
+*/
 }
 
 void checkRFID()
@@ -314,6 +371,22 @@ void setup() {
 }
 
 void loop() {
+  while(0)
+  {
+    analogWrite(MOTOR1_SPD,150);
+    analogWrite(MOTOR2_SPD,100);
+    digitalWrite(MOTOR3_IN1, HIGH);
+    digitalWrite(MOTOR3_IN2, HIGH);
+    
+    digitalWrite(MOTOR2_IN1, HIGH);
+    digitalWrite(MOTOR2_IN2, LOW);
+    
+    digitalWrite(MOTOR1_IN1, HIGH);
+    digitalWrite(MOTOR1_IN2, LOW);
+    
+    Serial.print("DEBUG\n");
+  }
+  
   /* while(1){
      analogWrite(MOTOR1_SPD, 173);
      analogWrite(MOTOR2_SPD, 138);
