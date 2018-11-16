@@ -81,14 +81,16 @@ int RIGHT = 3;
 int counter = 0;
 int side = 0;
 float pos = LINE, error = 0, lError = 0, lPos;
-MFRC522::Uid uid1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff};
-//uid1.size = 4
-//uid1.uidByte = {0x29, 0x4B, 0x0B, 0x0E} ; // uid do card1
+bool tala = true;
+bool javiro = false;
+MFRC522::Uid parada1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff}; // cartao1
+//parada1.size = 4
+//parada1.uidByte = {0x29, 0x4B, 0x0B, 0x0E} ; // uid do parada1
 
 
-MFRC522::Uid uid2 = {4, {0x04, 0x1C, 0x98, 0xEB}, 0xff};
-//uid2.size = 4
-//uid2.uidByte = {0x04, 0x1C, 0x98, 0xEB} ; // uid do card2
+MFRC522::Uid parada2 = {4, {0x04, 0x1C, 0x98, 0xEB}, 0xff}; // tag
+//parada2.size = 4
+//parada2.uidByte = {0x04, 0x1C, 0x98, 0xEB} ; // uid do card2
 
 //------------------------------------------------------------------IDS Cadastrados-------------------------------------------------------------------//
 
@@ -100,13 +102,10 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 void checkCup()
 {
   int cup = analogRead(COPO); //sensor de copo
-  Serial.print(cup);
-  Serial.print("\n");
-  if (cup >> 100)
-    digitalWrite(BUZZER, HIGH);
+  if (cup > 100)
+    tala = true;
   else
-    digitalWrite(BUZZER, LOW);
-
+    tala = false;
 }
 
 void turnLeft(int spd)
@@ -177,7 +176,7 @@ void go(int spd)
     analogWrite(MOTOR1_SPD, spd * 1.25);
     analogWrite(MOTOR2_SPD, spd  );
     analogWrite(MOTOR3_SPD, spd);
-    //  Serial.print("NORMAL FRONT");
+    Serial.print("NORMAL FRONT");
 
   }
   direction_number = FRONT;
@@ -204,7 +203,69 @@ void stop()
 
 }
 
+void entraMesa()
+{
+  javiro = true;
+  analogWrite(MOTOR1_SPD,130);
+  analogWrite(MOTOR2_SPD,130);
+  analogWrite(MOTOR3_SPD,130);
 
+  digitalWrite(MOTOR1_IN1, LOW);
+  digitalWrite(MOTOR1_IN2, HIGH);
+
+  digitalWrite(MOTOR2_IN1, HIGH);
+  digitalWrite(MOTOR2_IN2, LOW);
+
+  digitalWrite(MOTOR3_IN1, HIGH);
+  digitalWrite(MOTOR3_IN2, LOW);
+  Serial.print("Entrando na curva\n");
+  delay(500);
+  Serial.print("Pós delay\n");
+  Serial.print(mfrc522.uid.uidByte[0]);
+  mfrc522.uid.uidByte[0] = 0x00;
+}
+
+void saiMesa();
+{
+  // voltando pra faixa
+  analogWrite(MOTOR1_SPD,130);
+  analogWrite(MOTOR2_SPD,130);
+  analogWrite(MOTOR3_SPD,130);
+
+  digitalWrite(MOTOR1_IN2, LOW);
+  digitalWrite(MOTOR1_IN1, HIGH);
+
+  digitalWrite(MOTOR2_IN2, HIGH);
+  digitalWrite(MOTOR2_IN1, LOW);
+
+  digitalWrite(MOTOR3_IN2, HIGH);
+  digitalWrite(MOTOR3_IN1, LOW);
+  delay(600);
+}
+
+void waiting();
+{
+    analogWrite(MOTOR1_SPD,130);
+    analogWrite(MOTOR2_SPD,130);
+    analogWrite(MOTOR3_SPD,130);
+  
+    digitalWrite(MOTOR1_IN1, HIGH);
+    digitalWrite(MOTOR1_IN2, HIGH);
+  
+    digitalWrite(MOTOR2_IN1, HIGH);
+    digitalWrite(MOTOR2_IN2, HIGH);
+  
+    digitalWrite(MOTOR3_IN1, HIGH);
+    digitalWrite(MOTOR3_IN2, HIGH);
+    for(int i=0; i<20; i++)
+    {
+      if(!tala)
+        break;
+      delay(1000);
+      
+    }
+    tala = false;
+}
 void control()
 {
   int sensor1 = digitalRead(S1); //sensor1
@@ -217,7 +278,8 @@ void control()
   int ps3 = !sensor3*2000;
   int ps4 = !sensor4*3000;
   int ps5 = !sensor5*4000;
-  
+  Serial.print(mfrc522.uid.uidByte[0]);
+
   if(!sensor1 or !sensor2 or !sensor3 or !sensor4 or !sensor5)
   {
     lPos = pos;
@@ -234,10 +296,7 @@ void control()
       spd1 = MAXSPD;
     if(spd2>MAXSPD)
       spd2 = MAXSPD;
-    Serial.print(motorSpd);
-    Serial.print("\nspd1\n");
-    Serial.print(spd2);
-    Serial.print("\nspd2\n");
+   
     analogWrite(MOTOR1_SPD,spd1);
     analogWrite(MOTOR2_SPD,spd2);
   
@@ -250,6 +309,10 @@ void control()
     digitalWrite(MOTOR3_IN1, HIGH);
     digitalWrite(MOTOR3_IN2, HIGH);
     
+  }
+  else if(mfrc522.uid.uidByte[0] == parada2.uidByte[0])
+  {
+    waiting();
   }
   else
   {
@@ -265,52 +328,34 @@ void control()
   
     digitalWrite(MOTOR3_IN1, HIGH);
     digitalWrite(MOTOR3_IN2, LOW);
-    
+    if(javiro)
+      tala = false;
   }
-  /*if (!sensor3)    // Move Forward
-  {
-    Serial.print("going forward");
-    go(138);
-    //delay(1000);
-    counter = 0;
-  }
-  else if (!sensor2 or !sensor1)
-  {
-    Serial.print("going left");
-    turnLeft(100);
-    counter = 0;
-  }
-  else if (!sensor4 or !sensor5)
-  {
-    Serial.print("going right");
-    turnRight(100);
-    counter = 0;
-  } else {
-    // Serial.print(counter);
-
-    counter++;
-    if (counter % 3) {
-      turnRight(100);
-      side = LEFT;
+  if (mfrc522.uid.uidByte[0] == parada1.uidByte[0])
+    {
+      if(tala)
+      {
+        // virando pra mesa
+        entraMesa();
+        
+      }
+        
+      else
+      {
+        saiMesa();
+      }
     }
-    if (counter % 5 == 0) {
-      direction_number = 0;
-    }
-  }
-
-  Serial.print("\n");
-*/
 }
 
 void checkRFID()
 {
   Serial.print("Checking RFID");
 
-  if (mfrc522.uid.uidByte[0] == uid1.uidByte[0])
+  if (mfrc522.uid.uidByte[0] == parada1.uidByte[0])
   {
     for (int i = 0; i < 5; i++)
     {
-      Serial.print("FIRST CARD");
+      //Serial.print("FIRST CARD");
       /*digitalWrite(BUZZER, HIGH);
         delay(1000);
         digitalWrite(BUZZER, LOW);
@@ -320,11 +365,11 @@ void checkRFID()
     }
 
   }
-  else if (mfrc522.uid.uidByte[0] == uid2.uidByte[0])
+  else if (mfrc522.uid.uidByte[0] == parada2.uidByte[0])
   {
     for (int i = 0; i < 25; i++)
     {
-      Serial.print("SECOND CARD");
+      //Serial.print("SECOND CARD");
       /*digitalWrite(BUZZER, HIGH);
         delay(200);
         digitalWrite(BUZZER, LOW);
@@ -360,12 +405,13 @@ void setup() {
   //Pino do sensor de copo
   //pinMode(COPO, INPUT);
 
-  Serial.begin(9600);		// Initialize serial communications with the PC
-  while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-  SPI.begin();			// Init SPI bus
-  mfrc522.PCD_Init();		// Init MFRC522
-  mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
+  Serial.begin(9600);    // Initialize serial communications with the PC
+  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  SPI.begin();      // Init SPI bus
+  mfrc522.PCD_Init();   // Init MFRC522
+  mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+  digitalWrite(BUZZER, LOW);
 
   turnLeft(80);
 }
@@ -415,9 +461,9 @@ void loop() {
   checkRFID();
 
   // Dump debug info about the card; PICC_HaltA() is automatically called
-  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+ // mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
 
-  if (uid1.uidByte)
+  if (parada1.uidByte)
     Serial.print("AE");
 
 }
