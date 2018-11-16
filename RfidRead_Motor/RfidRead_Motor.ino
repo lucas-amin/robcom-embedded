@@ -83,6 +83,10 @@ int side = 0;
 float pos = LINE, error = 0, lError = 0, lPos;
 bool tala = true;
 bool javiro = false;
+
+
+//------------------------------------------------------------------IDS Cadastrados-------------------------------------------------------------------//
+
 MFRC522::Uid parada1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff}; // cartao1
 //parada1.size = 4
 //parada1.uidByte = {0x29, 0x4B, 0x0B, 0x0E} ; // uid do parada1
@@ -91,13 +95,12 @@ MFRC522::Uid parada1 = {4, {0x29, 0x4B, 0x0B, 0x0E}, 0xff}; // cartao1
 MFRC522::Uid parada2 = {4, {0x04, 0x1C, 0x98, 0xEB}, 0xff}; // tag
 //parada2.size = 4
 //parada2.uidByte = {0x04, 0x1C, 0x98, 0xEB} ; // uid do card2
-
-//------------------------------------------------------------------IDS Cadastrados-------------------------------------------------------------------//
-
 //(size,uid,whatevs)
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
+
+//------------------------------------------------------------------Checa copos-------------------------------------------------------------------//
 
 void checkCup()
 {
@@ -108,6 +111,12 @@ void checkCup()
     tala = false;
 }
 
+
+//------------------------------------------------------------------Controle do movimento -------------------------------------------------------------------//
+
+
+
+//------------------------------------------------------ Virar para esquerda -----------------------------------------------------
 void turnLeft(int spd)
 {
   if (direction_number != LEFT ) {
@@ -135,6 +144,8 @@ void turnLeft(int spd)
   digitalWrite(MOTOR3_IN2, HIGH);
 }
 
+
+//------------------------------------------------------ Virar para direita -----------------------------------------------------
 void turnRight(int spd)
 {
   if (direction_number != RIGHT) {
@@ -163,6 +174,8 @@ void turnRight(int spd)
   digitalWrite(MOTOR3_IN2, HIGH);
 }
 
+
+//------------------------------------------------------ Reto -----------------------------------------------------
 void go(int spd)
 {
   if (direction_number != FRONT) {
@@ -203,69 +216,9 @@ void stop()
 
 }
 
-void entraMesa()
-{
-  javiro = true;
-  analogWrite(MOTOR1_SPD,130);
-  analogWrite(MOTOR2_SPD,130);
-  analogWrite(MOTOR3_SPD,130);
 
-  digitalWrite(MOTOR1_IN1, LOW);
-  digitalWrite(MOTOR1_IN2, HIGH);
 
-  digitalWrite(MOTOR2_IN1, HIGH);
-  digitalWrite(MOTOR2_IN2, LOW);
-
-  digitalWrite(MOTOR3_IN1, HIGH);
-  digitalWrite(MOTOR3_IN2, LOW);
-  Serial.print("Entrando na curva\n");
-  delay(500);
-  Serial.print("Pós delay\n");
-  Serial.print(mfrc522.uid.uidByte[0]);
-  mfrc522.uid.uidByte[0] = 0x00;
-}
-
-void saiMesa();
-{
-  // voltando pra faixa
-  analogWrite(MOTOR1_SPD,130);
-  analogWrite(MOTOR2_SPD,130);
-  analogWrite(MOTOR3_SPD,130);
-
-  digitalWrite(MOTOR1_IN2, LOW);
-  digitalWrite(MOTOR1_IN1, HIGH);
-
-  digitalWrite(MOTOR2_IN2, HIGH);
-  digitalWrite(MOTOR2_IN1, LOW);
-
-  digitalWrite(MOTOR3_IN2, HIGH);
-  digitalWrite(MOTOR3_IN1, LOW);
-  delay(600);
-}
-
-void waiting();
-{
-    analogWrite(MOTOR1_SPD,130);
-    analogWrite(MOTOR2_SPD,130);
-    analogWrite(MOTOR3_SPD,130);
-  
-    digitalWrite(MOTOR1_IN1, HIGH);
-    digitalWrite(MOTOR1_IN2, HIGH);
-  
-    digitalWrite(MOTOR2_IN1, HIGH);
-    digitalWrite(MOTOR2_IN2, HIGH);
-  
-    digitalWrite(MOTOR3_IN1, HIGH);
-    digitalWrite(MOTOR3_IN2, HIGH);
-    for(int i=0; i<20; i++)
-    {
-      if(!tala)
-        break;
-      delay(1000);
-      
-    }
-    tala = false;
-}
+//------------------------------------------------------ Loop de controle -----------------------------------------------------
 void control()
 {
   int sensor1 = digitalRead(S1); //sensor1
@@ -286,8 +239,6 @@ void control()
     pos = (ps1 + ps2+ ps3 + ps4 + ps5)/(!sensor1 + !sensor2 + !sensor3 + !sensor4 + !sensor5);
     lError = error;
     error = pos - LINE;
-    //Serial.print(error);
-    //Serial.print("\n");
     float k = 0.015;
     float motorSpd = k * error; //+ Kd * (error - lError);
     int spd1 = (BASESPD - motorSpd) * 1.25;
@@ -296,7 +247,7 @@ void control()
       spd1 = MAXSPD;
     if(spd2>MAXSPD)
       spd2 = MAXSPD;
-   
+      
     analogWrite(MOTOR1_SPD,spd1);
     analogWrite(MOTOR2_SPD,spd2);
   
@@ -312,7 +263,26 @@ void control()
   }
   else if(mfrc522.uid.uidByte[0] == parada2.uidByte[0])
   {
-    waiting();
+    analogWrite(MOTOR1_SPD,130);
+    analogWrite(MOTOR2_SPD,130);
+    analogWrite(MOTOR3_SPD,130);
+  
+    digitalWrite(MOTOR1_IN1, HIGH);
+    digitalWrite(MOTOR1_IN2, HIGH);
+  
+    digitalWrite(MOTOR2_IN1, HIGH);
+    digitalWrite(MOTOR2_IN2, HIGH);
+  
+    digitalWrite(MOTOR3_IN1, HIGH);
+    digitalWrite(MOTOR3_IN2, HIGH);
+    for(int i=0; i<20; i++)
+    {
+      if(!tala)
+        break;
+      delay(1000);
+      
+    }
+    tala = false;
   }
   else
   {
@@ -336,21 +306,55 @@ void control()
       if(tala)
       {
         // virando pra mesa
-        entraMesa();
+        javiro = true;
+        analogWrite(MOTOR1_SPD,130);
+        analogWrite(MOTOR2_SPD,130);
+        analogWrite(MOTOR3_SPD,130);
+      
+        digitalWrite(MOTOR1_IN1, LOW);
+        digitalWrite(MOTOR1_IN2, HIGH);
+      
+        digitalWrite(MOTOR2_IN1, HIGH);
+        digitalWrite(MOTOR2_IN2, LOW);
+      
+        digitalWrite(MOTOR3_IN1, HIGH);
+        digitalWrite(MOTOR3_IN2, LOW);
+        Serial.print("Entrando na curva\n");
+        delay(500);
+        Serial.print("Pós delay\n");
+        Serial.print(mfrc522.uid.uidByte[0]);
+        mfrc522.uid.uidByte[0] = 0x00;
         
       }
         
       else
       {
-        saiMesa();
+        // voltando pra faixa
+        analogWrite(MOTOR1_SPD,130);
+        analogWrite(MOTOR2_SPD,130);
+        analogWrite(MOTOR3_SPD,130);
+      
+        digitalWrite(MOTOR1_IN2, LOW);
+        digitalWrite(MOTOR1_IN1, HIGH);
+      
+        digitalWrite(MOTOR2_IN2, HIGH);
+        digitalWrite(MOTOR2_IN1, LOW);
+      
+        digitalWrite(MOTOR3_IN2, HIGH);
+        digitalWrite(MOTOR3_IN1, LOW);
+        delay(600);
       }
     }
 }
 
+
+//------------------------------------------------------ Checar tags RFID-----------------------------------------------------
 void checkRFID()
 {
   Serial.print("Checking RFID");
 
+
+  // ----------- Checar se o cartão lido foi o da parada 1 ----------------
   if (mfrc522.uid.uidByte[0] == parada1.uidByte[0])
   {
     for (int i = 0; i < 5; i++)
@@ -363,8 +367,9 @@ void checkRFID()
       analogWrite(BUZZER, 20);
 
     }
-
   }
+
+ ----------- Checar se o cartão lido foi o da parada 2 ----------------
   else if (mfrc522.uid.uidByte[0] == parada2.uidByte[0])
   {
     for (int i = 0; i < 25; i++)
@@ -375,10 +380,10 @@ void checkRFID()
         digitalWrite(BUZZER, LOW);
         delay(200);*/
       analogWrite(BUZZER, 250);
-
     }
   }
 }
+
 void setup() {
 
   //Sensor de 5 vias
@@ -405,11 +410,11 @@ void setup() {
   //Pino do sensor de copo
   //pinMode(COPO, INPUT);
 
-  Serial.begin(9600);    // Initialize serial communications with the PC
-  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-  SPI.begin();      // Init SPI bus
-  mfrc522.PCD_Init();   // Init MFRC522
-  mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader details
+  Serial.begin(9600);		// Initialize serial communications with the PC
+  while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  SPI.begin();			// Init SPI bus
+  mfrc522.PCD_Init();		// Init MFRC522
+  mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
   Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
   digitalWrite(BUZZER, LOW);
 
@@ -433,20 +438,6 @@ void loop() {
     Serial.print("DEBUG\n");
   }
   
-  /* while(1){
-     analogWrite(MOTOR1_SPD, 173);
-     analogWrite(MOTOR2_SPD, 138);
-
-     digitalWrite(MOTOR2_IN1, HIGH);
-     digitalWrite(MOTOR2_IN2, LOW);
-
-     digitalWrite(MOTOR1_IN1, HIGH);
-     digitalWrite(MOTOR1_IN2, LOW);
-
-     digitalWrite(MOTOR3_IN1, LOW);
-     digitalWrite(MOTOR3_IN2, LOW);
-    }*/
-  //checkCup();
   control();
 
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
